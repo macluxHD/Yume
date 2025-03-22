@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/main.ts",
   "scripts": {
-    "dev": "tsx -r dotenv/config ."
+    "dev": "tsx -r dotenv/config .",
+    "postinstall": "tsx -r dotenv/config src/deploy-commands.ts"
   },
   "keywords": [],
   "author": "",
