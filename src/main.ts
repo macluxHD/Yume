@@ -1,10 +1,4 @@
-import {
-  Client,
-  Collection,
-  Events,
-  GatewayIntentBits,
-  MessageFlags,
-} from "discord.js";
+import { Client, Collection, GatewayIntentBits } from "discord.js";
 import fs from "fs";
 import path from "path";
 
@@ -14,6 +8,10 @@ client.commands = new Collection();
 
 const foldersPath = path.join(process.cwd(), "src", "commands");
 const commandFolders = fs.readdirSync(foldersPath);
+const eventsPath = path.join(process.cwd(), "src", "events");
+const eventFiles = fs
+  .readdirSync(eventsPath)
+  .filter((file) => file.endsWith(".ts"));
 
 (async () => {
   for (const folder of commandFolders) {
@@ -34,38 +32,16 @@ const commandFolders = fs.readdirSync(foldersPath);
       }
     }
   }
-})();
 
-client.once(Events.ClientReady, (readyClient) => {
-  console.log(`Ready! Logged in as ${readyClient.user.tag}`);
-});
-
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-
-  const command = interaction.client.commands.get(interaction.commandName);
-
-  if (!command) {
-    console.error(`No command matching ${interaction.commandName} was found.`);
-    return;
-  }
-
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: "There was an error while executing this command!",
-        flags: MessageFlags.Ephemeral,
-      });
+  for (const file of eventFiles) {
+    const filePath = path.join(eventsPath, file);
+    const event = (await import(filePath)).default;
+    if (event.once) {
+      client.once(event.name, (...args) => event.execute(...args));
     } else {
-      await interaction.reply({
-        content: "There was an error while executing this command!",
-        flags: MessageFlags.Ephemeral,
-      });
+      client.on(event.name, (...args) => event.execute(...args));
     }
   }
-});
+})();
 
 client.login(process.env.DISCORD_BOT_TOKEN);
