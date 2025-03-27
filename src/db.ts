@@ -18,6 +18,9 @@ for (let i = userVersion; i < newestVersion; i++) {
         `
       CREATE TABLE IF NOT EXISTS guilds (
         id TEXT PRIMARY KEY,
+        schedule_crontab TEXT,
+        crontab_enabled BOOLEAN DEFAULT FALSE,
+        is_blacklist BOOLEAN DEFAULT TRUE,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`
       ).run();
@@ -30,6 +33,17 @@ for (let i = userVersion; i < newestVersion; i++) {
           anilist_id TEXT,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        `
+      ).run();
+
+      db.prepare(
+        `
+        CREATE TABLE IF NOT EXISTS anime_list (
+          anilist_id TEXT PRIMARY KEY,
+          guild_id TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (guild_id) REFERENCES guilds(id)
         )
         `
       ).run();

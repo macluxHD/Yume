@@ -1,7 +1,16 @@
-// interface dbGuild {
-//   id: string;
-//   created_at: string;
-// }
+export interface dbGuild {
+  id: string;
+  schedule_crontab: string;
+  crontab_enabled: boolean;
+  is_blacklist: boolean;
+  created_at: string;
+}
+
+export interface animeList {
+  guild_id: string;
+  anilist_id: string;
+  created_at: string;
+}
 
 export interface animeCache {
   id: string;
