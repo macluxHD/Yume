@@ -18,6 +18,7 @@ export default {
         )
         .setRequired(true)
         .addChoices(
+          { name: "Today", value: "today" },
           { name: "Sunday", value: "0" },
           { name: "Monday", value: "1" },
           { name: "Tuesday", value: "2" },
@@ -28,7 +29,10 @@ export default {
         )
     ),
   async execute(interaction: ChatInputCommandInteraction) {
-    const weekday = interaction.options.getString("weekday") as string;
+    let weekday = interaction.options.getString("weekday") as string;
+
+    if (weekday == "today") weekday = moment.utc().weekday().toString();
+
     sendAnimeEmbed(
       interaction.channelId,
       await getSchedule(moment().utc().weekday(Number.parseInt(weekday)))
