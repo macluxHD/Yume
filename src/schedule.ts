@@ -24,7 +24,7 @@ export async function getSchedule(
   );
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch schedule: ${res.statusText}`);
+    throw new Error(`Failed to fetch schedule`);
   }
 
   let data = (await res.json()) as TimetableAnime[];
@@ -121,7 +121,7 @@ async function getAdditionalAnimeData(
   );
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch schedule: ${res.statusText}`);
+    throw new Error(`Failed to fetch anime`);
   }
 
   const data = (await res.json()) as Anime;
