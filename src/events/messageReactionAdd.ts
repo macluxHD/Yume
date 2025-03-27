@@ -30,12 +30,12 @@ export default {
 
     if (!message.embeds[0].author) return;
 
-    const anilist_id = Number.parseInt(message.embeds[0].author?.name);
+    const anilist_id = Number.parseInt(message.embeds[0].author.name);
 
     if (isNaN(anilist_id)) return;
 
     db.prepare(
       `INSERT OR IGNORE INTO anime_list (anilist_id, guild_id) VALUES (?, ?)`
-    ).run(anilist_id, message.guildId);
+    ).run(message.embeds[0].author.name, message.guildId);
   },
 };

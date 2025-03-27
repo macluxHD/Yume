@@ -39,18 +39,25 @@ export async function getSchedule(
   const list = db
     .prepare(`SELECT * FROM anime_list WHERE guild_id = ?`)
     .all(guild.id) as animeList[];
-  const isBlacklist = db
+  const dbGuild = db
     .prepare(`SELECT * FROM guilds WHERE id = ?`)
     .get(guild.id) as dbGuild;
   if (list.length > 0) {
-    data = data.filter(async (anime) => {
+    const filteredAnime = [];
+    for (const anime of data) {
       const additionalData = (await getAdditionalAnimeData(
         anime.route
       )) as animeCache;
 
-      const found = list.find((a) => a.anilist_id == additionalData.anilist_id);
-      return isBlacklist.is_blacklist ? !found : found;
-    });
+      const found = list.some((a) => a.anilist_id == additionalData.anilist_id);
+
+      if (dbGuild.is_blacklist) {
+        if (!found) filteredAnime.push(anime);
+      } else {
+        if (found) filteredAnime.push(anime);
+      }
+    }
+    data = filteredAnime;
   }
 
   return data;
