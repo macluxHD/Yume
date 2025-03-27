@@ -31,11 +31,17 @@ export default {
   async execute(interaction: ChatInputCommandInteraction) {
     let weekday = interaction.options.getString("weekday") as string;
 
+    if (!interaction.guild)
+      return interaction.reply("This command can only be used in a server");
+
     if (weekday == "today") weekday = moment.utc().weekday().toString();
 
     sendAnimeEmbed(
       interaction.channelId,
-      await getSchedule(moment().utc().weekday(Number.parseInt(weekday)))
+      await getSchedule(
+        moment().utc().weekday(Number.parseInt(weekday)),
+        interaction.guild
+      )
     );
 
     interaction.reply({

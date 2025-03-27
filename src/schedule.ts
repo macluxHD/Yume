@@ -1,11 +1,14 @@
-import { EmbedBuilder, TextChannel } from "discord.js";
+import { EmbedBuilder, Guild, TextChannel } from "discord.js";
 import moment from "moment";
 import client from "./main";
 import db from "./db";
 import { Anime, TimetableAnime } from "./types/animeschedule";
-import { animeCache } from "./types/db";
+import { animeCache, animeList, dbGuild } from "./types/db";
 
-export async function getSchedule(date: moment.Moment = moment()) {
+export async function getSchedule(
+  date: moment.Moment = moment(),
+  guild: Guild
+) {
   const query = new URLSearchParams({
     week: date.isoWeek().toString(),
     year: date.year().toString(),
@@ -31,6 +34,24 @@ export async function getSchedule(date: moment.Moment = moment()) {
     (anime) =>
       moment(anime.episodeDate).utc().dayOfYear() == date.utc().dayOfYear()
   );
+
+  // filter out animes based on whitelist/blacklist
+  const list = db
+    .prepare(`SELECT * FROM anime_list WHERE guild_id = ?`)
+    .all(guild.id) as animeList[];
+  const isBlacklist = db
+    .prepare(`SELECT * FROM guilds WHERE id = ?`)
+    .get(guild.id) as dbGuild;
+  if (list.length > 0) {
+    data = data.filter(async (anime) => {
+      const additionalData = (await getAdditionalAnimeData(
+        anime.route
+      )) as animeCache;
+
+      const found = list.find((a) => a.anilist_id == additionalData.anilist_id);
+      return isBlacklist.is_blacklist ? !found : found;
+    });
+  }
 
   return data;
 }
