@@ -3,6 +3,7 @@ export interface dbGuild {
   schedule_crontab: string;
   crontab_enabled: boolean;
   is_blacklist: boolean;
+  schedule_channel: string;
   created_at: string;
 }
 

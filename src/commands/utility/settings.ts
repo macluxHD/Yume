@@ -10,7 +10,7 @@ import { validateCronExpression } from "cron";
 import db from "../../db";
 
 const settingHandlers = {
-  cron: cronHandler,
+  schedule: scheduleHandler,
   list: listHandler,
 };
 
@@ -20,7 +20,7 @@ export default {
     .setDescription("Change settings")
     .addSubcommand((cmd) =>
       cmd
-        .setName("cron")
+        .setName("schedule")
         .setDescription("Settings related to automatic schedule posts")
         .addStringOption((opt) =>
           opt
@@ -33,6 +33,13 @@ export default {
           opt
             .setName("enabled")
             .setDescription("Wheter or not to send automatic schedules.")
+        )
+        .addChannelOption((opt) =>
+          opt
+            .setName("channel")
+            .setDescription(
+              "Channel into which the bot should post the anime schedule"
+            )
         )
     )
     .addSubcommand((cmd) =>
@@ -101,11 +108,12 @@ const transaction = db.transaction((updates) => {
   }
 });
 
-function cronHandler(
+function scheduleHandler(
   interaction: ChatInputCommandInteraction
 ): null | Promise<InteractionResponse> {
   const cron = interaction.options.getString("cron");
   const enabled = interaction.options.getBoolean("enabled");
+  const channel = interaction.options.getChannel("channel");
 
   const updates: Updates = [];
 
@@ -127,6 +135,13 @@ function cronHandler(
     updates.push({
       query: `UPDATE guilds SET crontab_enabled = ? WHERE id = ?`,
       params: [enabled ? 1 : 0, interaction.guildId],
+    });
+  }
+
+  if (channel) {
+    updates.push({
+      query: `UPDATE guilds SET schedule_channel = ? WHERE id = ?`,
+      params: [channel.id, interaction.guildId],
     });
   }
 

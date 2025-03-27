@@ -36,13 +36,19 @@ export default {
 
     if (weekday == "today") weekday = moment.utc().weekday().toString();
 
-    sendAnimeEmbed(
-      interaction.channelId,
-      await getSchedule(
+    try {
+      const schedule = await getSchedule(
         moment().utc().weekday(Number.parseInt(weekday)),
         interaction.guild
-      )
-    );
+      );
+
+      await sendAnimeEmbed(schedule, interaction.guild, interaction.channelId);
+    } catch (error) {
+      return interaction.reply({
+        content: error instanceof Error ? error.message : String(error),
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
     interaction.reply({
       content: "Sending schedule",

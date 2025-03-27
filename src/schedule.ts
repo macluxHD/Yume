@@ -63,10 +63,23 @@ export async function getSchedule(
   return data;
 }
 
+// if no channel is given the channel from the guild settings is taken
 export async function sendAnimeEmbed(
-  channelId: string,
-  animes: TimetableAnime[]
+  animes: TimetableAnime[],
+  guild: Guild,
+  channelId?: string
 ) {
+  if (!channelId) {
+    const dbGuild = db
+      .prepare(`SELECT * FROM guilds WHERE id = ?`)
+      .get(guild.id) as dbGuild;
+    channelId = dbGuild.schedule_channel;
+
+    if (!channelId) {
+      throw new Error("No channel set in settings");
+    }
+  }
+
   const channel = (await client.channels.fetch(
     channelId
   )) as TextChannel | null;

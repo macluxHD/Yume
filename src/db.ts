@@ -21,6 +21,7 @@ for (let i = userVersion; i < newestVersion; i++) {
         schedule_crontab TEXT,
         crontab_enabled BOOLEAN DEFAULT FALSE,
         is_blacklist BOOLEAN DEFAULT TRUE,
+        schedule_channel TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`
       ).run();
