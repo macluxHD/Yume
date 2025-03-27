@@ -1,6 +1,9 @@
 import { EmbedBuilder, TextChannel } from "discord.js";
 import moment from "moment";
 import client from "./main";
+import db from "./db";
+import { Anime, TimetableAnime } from "./types/animeschedule";
+import { animeCache } from "./types/db";
 
 export async function getSchedule(date: moment.Moment = moment()) {
   const query = new URLSearchParams({
@@ -44,7 +47,9 @@ export async function sendAnimeEmbed(
     throw new Error("Cannot find given channel");
   }
 
-  animes.forEach((anime) => {
+  for (const anime of animes) {
+    const additionalData = await getAdditionalAnimeData(anime.route);
+
     const embed = new EmbedBuilder()
       .setTitle(anime.title)
       .setThumbnail(
@@ -66,6 +71,57 @@ export async function sendAnimeEmbed(
       .setFooter({ text: "Powered by animeschedule.net" })
       .setColor("#00b0f4");
 
-    channel.send({ embeds: [embed] });
-  });
+    embed.setURL("https://anilist.co/anime/" + additionalData.anilist_id);
+    embed.setAuthor({ name: additionalData.anilist_id });
+
+    await channel.send({ embeds: [embed] });
+  }
+}
+
+async function getAdditionalAnimeData(
+  animeRoute: TimetableAnime["route"]
+): Promise<animeCache> {
+  const cacheTime = moment().subtract(1, "months").unix();
+  const cache = db
+    .prepare(
+      `SELECT * FROM anime_cache WHERE route = ? AND Datetime(updated_at) >= Datetime(?, 'unixepoch')`
+    )
+    .get(animeRoute, cacheTime) as animeCache;
+
+  if (cache) return cache;
+
+  const res = await fetch(
+    "https://animeschedule.net/api/v3/anime/" + animeRoute,
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.ANIME_SCHEDULE_API_TOKEN}`,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch schedule: ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as Anime;
+
+  const new_cache: animeCache = {
+    id: data.id,
+    route: data.route,
+    anilist_id: data.websites.aniList.match(/\/anime\/(\d+)/)?.[1] as string,
+  };
+
+  db.prepare(
+    `
+    INSERT OR IGNORE INTO anime_cache (id, route, anilist_id) VALUES (?, ?, ?)
+    `
+  ).run(...Object.values(new_cache));
+
+  db.prepare(
+    `
+    UPDATE anime_cache SET id = ?, route = ?, anilist_id = ? WHERE route = ?
+    `
+  ).run(...Object.values(new_cache), animeRoute);
+
+  return new_cache;
 }
