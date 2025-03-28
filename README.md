@@ -13,6 +13,8 @@ Yume is a Discord bot designed to display the schedule of airing anime. It fetch
 
 Before setting up the bot, ensure you have the following:
 
+- **Docker**: Install Docker on your machine. Follow the instructions on the [Docker website](https://docs.docker.com/get-docker/) for your operating system.
+- **Docker Compose**: Install Docker Compose. You can find installation instructions on the [Docker Compose website](https://docs.docker.com/compose/install/).
 - **Discord Bot Token**: Create an application on the [Discord Developer Portal](https://discord.com/developers/applications).
 - **Discord Application ID**: The application ID of your Discord application.
 - **AnimeSchedule API Token**: Obtain an API token from [AnimeSchedule.net](https://animeschedule.net/).
@@ -21,7 +23,7 @@ Before setting up the bot, ensure you have the following:
 
 ### 1. Download the compose.yaml file
 
-Download the `compose.yaml` file from the repository. This file contains the configuration for Docker Compose, which will help you set up the bot in a containerized environment.
+Download the `docker-compose.yaml` file from the repository. This file contains the configuration for Docker Compose, which will help you set up the bot in a containerized environment.
 
 ### 2. Configure Environment Variables
 
@@ -34,43 +36,65 @@ environment:
   - ANIME_SCHEDULE_API_TOKEN=YOUR_ANIMESCHEDULE_API_TOKEN
 ```
 
-### 4. Build the Project
+### 3. (Optional) Change the database path location
 
-Compile the TypeScript code into JavaScript:
+If you want to change the location of the SQLite database, modify the volume path in the `docker-compose.yaml` file. Change the `./data` path to your desired location:
 
-```bash
-npm run build
+Default:
+
+```yaml
+volumes:
+  - ./data:/app/data
 ```
 
-### 5. Deploy Slash Commands
+Custom:
 
-Deploy the bot's slash commands to Discord:
-
-```bash
-npm run refresh
+```yaml
+volumes:
+  - /path/to/your/custom/location:/app/data
 ```
 
-### 6. Start the Bot
+### 4. Start the Bot
 
-Run the bot in production mode:
-
-```bash
-npm run prod:start
-```
-
-Alternatively, for development mode with live updates:
+Run the following command to start the bot using Docker Compose:
 
 ```bash
-npm run dev:start
+docker compose up -d
 ```
 
-### 7. Invite the Bot to Your Server
+This command will build the Docker image and start the bot in detached mode.
+
+To stop the bot, use:
+
+```bash
+docker compose down
+```
+
+### 5. Verify the Bot is Running
+
+To check if the bot is running, use the following command:
+
+```bash
+docker compose logs -f
+```
+
+This command will display the logs from the bot container. Look for messages indicating that the bot has successfully connected to Discord.
+
+### 6. Invite the Bot to Your Server
 
 Use the following URL to invite the bot to your Discord server. Replace `YOUR_APPLICATION_ID` with your bot's client ID:
 
 ```
 https://discord.com/api/oauth2/authorize?client_id=YOUR_APPLICATION_ID&permissions=8&scope=bot%20applications.commands
 ```
+
+## Discord automatic schedule posting setup
+
+To set up automatic schedule posting, you need to configure the bot to send messages to a specific channel at regular intervals. This can be done using the `/settings schedules` command in Discord.
+
+- **cron**: The cron option defines when the bot will post the schedule. For more information on cron syntax, refer to the [crontab.guru](https://crontab.guru/) website.
+- **enable**: The enable option allows you to enable or disable the schedule posting feature. Set it to `true` to enable automatic posting.
+- **channel**: The channel option specifies the Discord channel where the schedule will be posted.
 
 ## Commands
 
@@ -85,54 +109,3 @@ Displays the anime schedule for a specific day of the week.
 ### `/settings`
 
 Allows administrators to configure bot settings, such as schedule posting times and anime whitelist/blacklist.
-
-## Development
-
-### File Structure
-
-- **`src/commands/`**: Contains all slash commands.
-- **`src/events/`**: Handles Discord events like `ready` and `interactionCreate`.
-- **`src/schedule.ts`**: Core logic for fetching and sending anime schedules.
-- **`src/db.ts`**: Database setup and migrations.
-
-### Linting and Formatting
-
-The project uses ESLint for linting. To check for linting issues, run:
-
-```bash
-npm run lint
-```
-
-### Build and Test
-
-To build the project:
-
-```bash
-npm run build
-```
-
-To run the bot locally:
-
-```bash
-npm run dev:start
-```
-
-## Docker Support
-
-The bot can also be run using Docker. Build and run the container with the following commands:
-
-```bash
-docker-compose up --build
-```
-
-## Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests.
-
-## License
-
-This project is licensed under the ISC License. See the `LICENSE` file for details.
-
-```
-
-```

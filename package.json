@@ -4,7 +4,7 @@
   "description": "Discord bot to show the schedule of airing anime",
   "main": "dist/main.js",
   "scripts": {
-    "dev:start": "tsx -r dotenv/config src/main.ts",
+    "dev": "tsx -r dotenv/config src/main.ts",
     "refresh": "tsx -r dotenv/config src/deploy-commands.ts",
     "build": "tsc",
     "prod:start": "node dist/deploy-commands.js && node dist/main.js"
