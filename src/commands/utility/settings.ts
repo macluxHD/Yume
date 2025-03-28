@@ -8,6 +8,7 @@ import {
 
 import { validateCronExpression } from "cron";
 import db from "../../db";
+import { startCronJob } from "../../schedule";
 
 const settingHandlers = {
   schedule: scheduleHandler,
@@ -69,6 +70,12 @@ export default {
         )
     ),
   async execute(interaction: ChatInputCommandInteraction) {
+    if (!interaction.guild)
+      return interaction.reply({
+        content: "This command can only be used in a Guild",
+        flags: MessageFlags.Ephemeral,
+      });
+
     if (
       !interaction.memberPermissions ||
       !interaction.memberPermissions.has(
@@ -139,6 +146,12 @@ function scheduleHandler(
   }
 
   if (channel) {
+    if (channel.type != 0)
+      return interaction.reply({
+        content: "Cannot use this channel for automated notifications",
+        flags: MessageFlags.Ephemeral,
+      });
+
     updates.push({
       query: `UPDATE guilds SET schedule_channel = ? WHERE id = ?`,
       params: [channel.id, interaction.guildId],
@@ -146,6 +159,7 @@ function scheduleHandler(
   }
 
   transaction(updates);
+  startCronJob(interaction.guildId!);
   return null;
 }
 

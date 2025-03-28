@@ -1,5 +1,6 @@
 import { Client, Events } from "discord.js";
 import db from "../db";
+import { startCronJob } from "../schedule";
 
 export default {
   name: Events.ClientReady,
@@ -19,6 +20,7 @@ export default {
 
         db.prepare(`INSERT INTO guilds (id) VALUES (?)`).run(guild.id);
       }
+      startCronJob(guild.id);
     });
   },
 };

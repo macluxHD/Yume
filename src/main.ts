@@ -8,6 +8,7 @@ const client = new Client({
 });
 
 client.commands = new Collection();
+client.cronJobs = [];
 
 const foldersPath = path.join(process.cwd(), "src", "commands");
 const commandFolders = fs.readdirSync(foldersPath);

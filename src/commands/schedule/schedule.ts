@@ -2,6 +2,7 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
   SlashCommandBuilder,
+  TextChannel,
 } from "discord.js";
 import { getSchedule, sendAnimeEmbed } from "../../schedule";
 import moment from "moment";
@@ -38,11 +39,11 @@ export default {
 
     try {
       const schedule = await getSchedule(
-        moment().utc().weekday(Number.parseInt(weekday)),
-        interaction.guild
+        interaction.guild,
+        moment().utc().weekday(Number.parseInt(weekday))
       );
 
-      await sendAnimeEmbed(schedule, interaction.guild, interaction.channelId);
+      await sendAnimeEmbed(schedule, interaction.channel as TextChannel);
     } catch (error) {
       return interaction.reply({
         content: error instanceof Error ? error.message : String(error),

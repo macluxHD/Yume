@@ -4,10 +4,11 @@ import client from "./main";
 import db from "./db";
 import { Anime, TimetableAnime } from "./types/animeschedule";
 import { animeCache, animeList, dbGuild } from "./types/db";
+import { CronJob, validateCronExpression } from "cron";
 
 export async function getSchedule(
-  date: moment.Moment = moment(),
-  guild: Guild
+  guild: Guild,
+  date: moment.Moment = moment()
 ) {
   const query = new URLSearchParams({
     week: date.isoWeek().toString(),
@@ -66,28 +67,8 @@ export async function getSchedule(
 // if no channel is given the channel from the guild settings is taken
 export async function sendAnimeEmbed(
   animes: TimetableAnime[],
-  guild: Guild,
-  channelId?: string
+  channel: TextChannel
 ) {
-  if (!channelId) {
-    const dbGuild = db
-      .prepare(`SELECT * FROM guilds WHERE id = ?`)
-      .get(guild.id) as dbGuild;
-    channelId = dbGuild.schedule_channel;
-
-    if (!channelId) {
-      throw new Error("No channel set in settings");
-    }
-  }
-
-  const channel = (await client.channels.fetch(
-    channelId
-  )) as TextChannel | null;
-
-  if (!channel) {
-    throw new Error("Cannot find given channel");
-  }
-
   for (const anime of animes) {
     const additionalData = await getAdditionalAnimeData(anime.route);
 
@@ -165,4 +146,61 @@ async function getAdditionalAnimeData(
   ).run(...Object.values(new_cache), animeRoute);
 
   return new_cache;
+}
+
+export async function startCronJob(guildId: string) {
+  stopCronJob(guildId);
+  const dbGuild = db
+    .prepare(`SELECT * from guilds WHERE id = ?`)
+    .get(guildId) as dbGuild;
+
+  if (
+    !validateCronExpression(dbGuild.schedule_crontab).valid ||
+    !dbGuild.schedule_channel ||
+    !dbGuild.crontab_enabled
+  )
+    return;
+
+  const guild = await client.guilds.fetch(guildId);
+
+  const job = CronJob.from({
+    cronTime: dbGuild.schedule_crontab,
+    onTick: () => {
+      scheduledTask(guild, dbGuild.schedule_channel);
+    },
+    start: true,
+    timeZone: "utc",
+  });
+
+  client.cronJobs[guildId] = job;
+}
+
+function stopCronJob(guildId: string) {
+  const job = client.cronJobs[guildId];
+
+  if (!job) return;
+
+  job.stop();
+
+  client.cronJobs[guildId] = null;
+}
+
+export async function scheduledTask(guild: Guild, channelId: string) {
+  const channel = (await client.channels.fetch(
+    channelId
+  )) as TextChannel | null;
+
+  if (!channel) {
+    console.log("Cannot find given channel");
+    stopCronJob(guild.id);
+    return;
+  }
+
+  try {
+    const schedule = await getSchedule(guild);
+
+    await sendAnimeEmbed(schedule, channel);
+  } catch (error) {
+    console.log(error, "For guild: " + guild.id);
+  }
 }
