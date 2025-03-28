@@ -2,9 +2,15 @@ import { REST, Routes } from "discord.js";
 import fs from "fs";
 import path from "path";
 
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const commands = [];
 // Grab all the command folders from the commands directory you created earlier
-const foldersPath = path.join(process.cwd(), "src", "commands");
+const foldersPath = path.join(__dirname, "commands");
 const commandFolders = fs.readdirSync(foldersPath);
 
 if (!process.env.DISCORD_BOT_TOKEN) {
@@ -31,7 +37,7 @@ const rest = new REST().setToken(process.env.DISCORD_BOT_TOKEN);
     const commandsPath = path.join(foldersPath, folder);
     const commandFiles = fs
       .readdirSync(commandsPath)
-      .filter((file) => file.endsWith(".ts"));
+      .filter((file) => file.endsWith(".ts") || file.endsWith(".js"));
     // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
     for (const file of commandFiles) {
       const filePath = path.join(commandsPath, file);

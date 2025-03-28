@@ -4,7 +4,7 @@ import {
   MessageReactionEventDetails,
   User,
 } from "discord.js";
-import db from "../db";
+import db from "../db.js";
 
 export default {
   name: Events.MessageReactionAdd,

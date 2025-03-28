@@ -7,8 +7,8 @@ import {
 } from "discord.js";
 
 import { validateCronExpression } from "cron";
-import db from "../../db";
-import { startCronJob } from "../../schedule";
+import db from "../../db.js";
+import { startCronJob } from "../../schedule.js";
 
 const settingHandlers = {
   schedule: scheduleHandler,
@@ -159,7 +159,7 @@ function scheduleHandler(
   }
 
   transaction(updates);
-  startCronJob(interaction.guildId!);
+  startCronJob(interaction.guildId!, interaction.client);
   return null;
 }
 

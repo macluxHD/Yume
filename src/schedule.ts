@@ -1,9 +1,8 @@
-import { EmbedBuilder, Guild, TextChannel } from "discord.js";
+import { Client, EmbedBuilder, Guild, TextChannel } from "discord.js";
 import moment from "moment";
-import client from "./main";
-import db from "./db";
-import { Anime, TimetableAnime } from "./types/animeschedule";
-import { animeCache, animeList, dbGuild } from "./types/db";
+import db from "./db.js";
+import { Anime, TimetableAnime } from "./types/animeschedule.js";
+import { animeCache, animeList, dbGuild } from "./types/db.js";
 import { CronJob, validateCronExpression } from "cron";
 
 export async function getSchedule(
@@ -148,8 +147,8 @@ async function getAdditionalAnimeData(
   return new_cache;
 }
 
-export async function startCronJob(guildId: string) {
-  stopCronJob(guildId);
+export async function startCronJob(guildId: string, client: Client) {
+  stopCronJob(guildId, client);
   const dbGuild = db
     .prepare(`SELECT * from guilds WHERE id = ?`)
     .get(guildId) as dbGuild;
@@ -166,7 +165,7 @@ export async function startCronJob(guildId: string) {
   const job = CronJob.from({
     cronTime: dbGuild.schedule_crontab,
     onTick: () => {
-      scheduledTask(guild, dbGuild.schedule_channel);
+      scheduledTask(guild, dbGuild.schedule_channel, client);
     },
     start: true,
     timeZone: "utc",
@@ -175,7 +174,7 @@ export async function startCronJob(guildId: string) {
   client.cronJobs[guildId] = job;
 }
 
-function stopCronJob(guildId: string) {
+function stopCronJob(guildId: string, client: Client) {
   const job = client.cronJobs[guildId];
 
   if (!job) return;
@@ -185,14 +184,18 @@ function stopCronJob(guildId: string) {
   client.cronJobs[guildId] = null;
 }
 
-export async function scheduledTask(guild: Guild, channelId: string) {
+export async function scheduledTask(
+  guild: Guild,
+  channelId: string,
+  client: Client
+) {
   const channel = (await client.channels.fetch(
     channelId
   )) as TextChannel | null;
 
   if (!channel) {
     console.log("Cannot find given channel");
-    stopCronJob(guild.id);
+    stopCronJob(guild.id, client);
     return;
   }
 

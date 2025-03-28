@@ -4,7 +4,7 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
-import { getSchedule, sendAnimeEmbed } from "../../schedule";
+import { getSchedule, sendAnimeEmbed } from "../../schedule.js";
 import moment from "moment";
 
 export default {

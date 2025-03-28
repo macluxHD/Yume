@@ -1,5 +1,5 @@
 import { Events, Guild } from "discord.js";
-import db from "../db";
+import db from "../db.js";
 
 export default {
   name: Events.GuildCreate,
