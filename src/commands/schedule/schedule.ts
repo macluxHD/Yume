@@ -37,6 +37,11 @@ export default {
 
     if (weekday == "today") weekday = moment.utc().weekday().toString();
 
+    interaction.reply({
+      content: "Sending schedule",
+      flags: MessageFlags.Ephemeral,
+    });
+
     try {
       const schedule = await getSchedule(
         interaction.guild,
@@ -45,15 +50,7 @@ export default {
 
       await sendAnimeEmbed(schedule, interaction.channel as TextChannel);
     } catch (error) {
-      return interaction.reply({
-        content: error instanceof Error ? error.message : String(error),
-        flags: MessageFlags.Ephemeral,
-      });
+      console.log(error);
     }
-
-    interaction.reply({
-      content: "Sending schedule",
-      flags: MessageFlags.Ephemeral,
-    });
   },
 };
